@@ -1,0 +1,96 @@
+.model large;   
+.stack 100h;    
+data segment
+    i dw 0h
+    m dw 0h
+    j dw 0h
+    String db "Enter a line: $" 
+    Stg db 100h dup(0h);   
+    mas dw 100h dup(0h) 
+ends
+
+code segment
+Start:  
+Sort proc
+mov ax, @data;  
+mov ds, ax;
+mov ah, 00h;     ; screen cleaning
+mov al, 2h; 
+int 10h
+mov ah, 09h
+Lea dx, String
+int 21h 
+mov ah, 1h;  char input
+mov si, 0h
+mov bx, 0h
+Input:   ;array input
+int 21h
+mov cx, si
+mov Stg[bx], cl;    word length 
+cmp al, 32;  space check
+jne Skip1
+mov si, 0h
+add bx, 10h;     new word begin
+jmp Input
+Skip1:
+inc si
+mov Stg[bx+si], al;  symbol to string  
+cmp al, 13
+jne Input
+mov Stg[bx+si], 0h;  "enter" delete
+mov i, bx;   number of words
+mov bx, 0h
+Sort1:        ;sort
+mov di, bx;   ;min length 
+mov ax, bx
+add ax, 10h
+Sort2:
+mov si, ax 
+mov cl, Stg[di]
+cmp cl, Stg[si]
+jae Skip2
+mov di, si;  if less
+Skip2: 
+add ax, 10h
+cmp ax, i
+jbe Sort2
+mov si, 0h
+Sort3:
+mov cl, Stg[bx+si]   ;words change
+mov al, Stg[di]
+mov Stg[bx+si], al
+mov Stg[di], cl
+inc si
+inc di
+cmp si, 10h
+jb Sort3
+add bx, 10h
+cmp bx, i
+jb Sort1
+mov ah, 02h; coursor setting function
+mov bh, 0h;  number of page   
+mov dh, 2h;            line
+mov dl, 0h;            char
+int 10h
+mov bx, 0h
+mov si, 0h
+mov ah, 2h;  char output function
+Output: 
+inc si
+mov dx, word ptr Stg[bx+si]
+cmp dx, 0h
+jne Skip3
+cmp bx, i
+je Exit
+mov si, 0h
+add bx, 10h
+mov dx, ' ' 
+Skip3:
+int 21h
+cmp bx, i
+jbe Output
+Exit:
+mov ah, 4ch;
+int 21h 
+Sort endp
+End Start
